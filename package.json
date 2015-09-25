@@ -1,0 +1,16 @@
+{
+  "name": "light",
+  "dependencies": {
+    "mysql": "*"
+  },
+  "devDependencies": {
+    "babel": "*",
+    "chai": "*",
+    "debug": "*",
+    "mocha": "*"
+  },
+  "scripts": {
+    "test": "./node_modules/mocha/bin/mocha --compilers js:babel/register",
+    "lint": "jshint server.js node/*.js"
+  }
+}
