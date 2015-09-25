@@ -1,24 +1,23 @@
 "use strict";
 
-const PORT=9090;
+const PORT = 9090;
 
 var lightDebug = require('debug')('light');
 var serverDebug = require('debug')('light:server');
-var http = require('http');
-var util = require('util');
 var db = require('./node/db');
+var express = require('express');
+var app = express();
 
-//Create a server
-var server = http.createServer(handleRequest);
+var server = app.listen(PORT, function () {
+    var host = server.address().address;
+    var port = server.address().port;
 
-//Lets start our server
-server.listen(PORT, function(){
-    //Callback triggered when server is successfully listening. Hurray!
-    console.log("Server listening on: http://localhost:%s", PORT);
+    console.log('Example app listening at http://%s:%s', host, port);
 });
 
-//We need a function which handles requests and send response
-function handleRequest(request, res){
-    res.writeHead(200, {'Content-Type': 'application/json'});
-    res.end(JSON.stringify({ a: 1 }));
-}
+app.post('/data', function (req, res) {
+    db.queryDb('SELECT DATE_FORMAT(months.date,\'%Y-%m\') AS \'date\', months.kwh FROM months ORDER BY DATE(months.date)')
+        .then(function sendData(results) {
+            res.send(JSON.stringify(results));
+        });
+});
