@@ -17,6 +17,12 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
     var w = $('#graph').width() - margin.left - margin.right;
     var h = 500 - margin.top - margin.bottom;
     var padding = w / 25;
+    var tooltip = d3.select("body")
+        .append("div")
+        .style("position", "absolute")
+        .style("z-index", "10")
+        .style("visibility", "hidden")
+        .text("a simple tooltip");
 
     $(function () {
         $("#showKwh").click(showKwh);
@@ -39,11 +45,15 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
     }
 
     function showData(data) {
+
         deleteGraph();
         var dataset;
+        var unit;
         var months = [];
         try {
-            dataset = JSON.parse(data);
+            var jsonData = JSON.parse(data);
+            dataset = jsonData.dbData;
+            unit = jsonData.unit;
         } catch (e) {
             console.log("no parse");
             return;
@@ -101,6 +111,15 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
             })
             .attr("fill", function (d) {
                 return "rgb(" + Math.round(((d.yValue / maxy) * 255)) + ", 0, 0)";
+            })
+            .on("mouseover", function (d) {
+                return tooltip.style("visibility", "visible").text(d.xLabel + ': ' + d.yValue + ' ' + unit);
+            })
+            .on("mousemove", function (d) {
+                return tooltip.style("top", (event.pageY - 10) + "px").style("left", (event.pageX + 10) + "px");
+            })
+            .on("mouseout", function (d) {
+                return tooltip.style("visibility", "hidden");
             });
 
         svg.append("g")

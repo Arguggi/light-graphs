@@ -18,13 +18,21 @@ var server = app.listen(PORT, function () {
 app.get('/data/kwh', function (req, res) {
     db.queryDb('SELECT DATE_FORMAT(months.date,\'%Y-%m\') AS \'xLabel\', months.kwh AS yValue FROM months ORDER BY DATE(months.date)')
         .then(function sendData(results) {
-            res.send(JSON.stringify(results));
+            var dataJson = JSON.stringify({
+                    dbData: results,
+                    unit: "Kwh"
+            });
+            res.send(dataJson);
         });
 });
 
 app.get('/data/cost', function (req, res) {
     db.queryDb('SELECT DATE_FORMAT(months.date,\'%Y-%m\') AS \'xLabel\', months.cost AS yValue FROM months ORDER BY DATE(months.date)')
         .then(function sendData(results) {
-            res.send(JSON.stringify(results));
+            var dataJson = JSON.stringify({
+                    dbData: results,
+                    unit: "€"
+            });
+            res.send(dataJson);
         });
 });
