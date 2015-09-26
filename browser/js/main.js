@@ -12,7 +12,7 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
         top: 20,
         right: 40,
         bottom: 60,
-        left: 40
+        left: 60
     };
     var w = $('#graph').width() - margin.left - margin.right;
     var h = 500 - margin.top - margin.bottom;
@@ -150,6 +150,13 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
         svg.append("g")
             .attr("class", "axis")
             .call(yAxis);
+// Add an x-axis label.
+        svg.append("text")
+            .attr("class", "ylabel")
+            .attr("x", -(h/2) - 10)
+            .attr("y", '-30px')
+            .attr("transform", "rotate(-90)")
+            .text(data.unit);
     }
 
     function sortGraph(sortProp) {
