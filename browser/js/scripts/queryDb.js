@@ -2,15 +2,11 @@
 
 define(['jquery'], function ($) {
     return {
-        getDbTable: function getDbTable(table) {
+        getDbTable: function getDbTable(dataCol) {
             return new Promise(function getData(resolve, reject) {
                 $.ajax({
-                    method: "POST",
-                    //dataType: "json",
-                    url: "/data/",
-                    data: {
-                        table: table
-                    },
+                    method: "GET",
+                    url: "/data/" + dataCol,
                     success: function success(response) {
                         resolve(response);
                     },
