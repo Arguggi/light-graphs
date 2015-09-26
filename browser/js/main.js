@@ -14,45 +14,44 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
     });
 
     function showPrice() {
-        var w = $('#graph').width();
-        var h = 500;
-        var padding = 40;
+        var margin = {top: 20, right: 40, bottom: 60, left: 40};
+        var w = $('#graph').width() - margin.left - margin.right;
+        var h = 800 - margin.top - margin.bottom;
+        var padding = w / 25;
         queryDb.getDbTable("wqewqe")
             .then(function showData(data) {
                 deleteGraph();
                 var dataset;
+                var months = [];
                 try {
                     dataset = JSON.parse(data);
                 } catch (e) {
                     console.log("no parse");
                     return;
                 }
+                console.log(dataset);
+                var maxy = d3.max(dataset, function (d) {
+                    return d.kwh;
+                });
 
                 var i = 0;
                 dataset.forEach(row => {
                     row.order = i++;
+                    months.push(row.date);
                 });
-                var xScale = d3.scale.linear()
-                    .domain([0, d3.max(dataset, function (d) {
-                        return d.order;
-                    })])
-                    .range([padding, w - padding * 2]);
+                var xScale = d3.scale.ordinal()
+                    .domain(d3.range(dataset.length))
+                    .rangeRoundBands([0, w], 0.05);
 
                 var yScale = d3.scale.linear()
-                    .domain([0, d3.max(dataset, function (d) {
-                        return d.kwh;
-                    })])
-                    .range([h - padding, padding]);
-
-                var rScale = d3.scale.linear()
-                    .domain([0, d3.max(dataset, function (d) {
-                        return d.kwh;
-                    })])
-                    .range([2, 5]);
-                var formatAxis = d3.format("  0");
+                    .domain([maxy , 0])
+                    .range([0 , h]);
 
                 var xAxis = d3.svg.axis()
                     .scale(xScale)
+                    .tickFormat(function (d) {
+                        return dataset[d].date;
+                    })
                     .orient("bottom");
 
                 var yAxis = d3.svg.axis()
@@ -63,32 +62,42 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
                 var svg = d3.select("#graph")
                     .append("svg")
                     .attr("id", "svg-id")
-                    .attr("width", w)
-                    .attr("height", h);
+                    .attr("width", w + margin.left + margin.right)
+                    .attr("height", h + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-                svg.selectAll("circle")
+                svg.selectAll("rect")
                     .data(dataset)
                     .enter()
-                    .append("circle")
-                    .attr("cx", function (d) {
-                        return xScale(d.order);
+                    .append("rect")
+                    .attr("x", function(d, i) {
+                        return xScale(i);
                     })
-                    .attr("cy", function (d) {
-                        return yScale(d.kwh);
+                    .attr("y", function(d) {
+                        return h - d.kwh;
                     })
-                    .attr("r", function (d) {
-                        return rScale(d.kwh);
+                    .attr("width", xScale.rangeBand())
+                    .attr("height", function(d) {
+                        return d.kwh;
                     })
-                    .style("fill", "purple");
+                    .attr("fill", function(d) {
+                        return "rgb(" + Math.round(((d.kwh / maxy) * 255)) +", 0, 0)";
+                    });
 
                 svg.append("g")
                     .attr("class", "axis")
-                    .attr("transform", "translate(0," + (h - padding) + ")")
-                    .call(xAxis);
+                    .attr("transform", "translate(0," + h + ")")
+                    .call(xAxis)
+                    .selectAll("text")
+                    .style("text-anchor", "start")
+                    .attr("dx", ".8em")
+                    .attr("dy", "-.15em")
+                    .attr("transform", "rotate(65)");
 
                 svg.append("g")
                     .attr("class", "axis")
-                    .attr("transform", "translate(" + padding  + ",0)")
+                    .attr("transform", "translate(0,0)")
                     .call(yAxis);
             });
     }
