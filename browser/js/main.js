@@ -17,16 +17,35 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
     var w = $('#graph').width() - margin.left - margin.right;
     var h = 500 - margin.top - margin.bottom;
     var padding = w / 25;
+    var dataset;
+    var unit;
     var tooltip = d3.select("body")
         .append("div")
         .style("position", "absolute")
         .style("z-index", "10")
-        .style("visibility", "hidden")
-        .text("a simple tooltip");
+        .style("visibility", "hidden");
+
+    var monthColors = {
+        '01': '#D8D8D8',
+        '02': '#858585',
+        '03': '#0FA1FF',
+        '04': '#00548B',
+        '05': '#00416B',
+        '06': '#93FB56',
+        '07': '#18F484',
+        '08': '#B4FD00',
+        '09': '#FFA558',
+        '10': '#FFAD19',
+        '11': '#FF2800',
+        '12': '#ECEBEC'
+    };
 
     $(function () {
         $("#showKwh").click(showKwh);
         $("#showCost").click(showCost);
+        $("#sortMonth").click((ev) => sortGraph('month'));
+        $("#sortTime").click((ev) => sortGraph('xLabel'));
+        $("#sortValue").click((ev) => sortGraph('yValue'));
     });
 
     function showCost() {
@@ -45,27 +64,20 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
     }
 
     function showData(data) {
-
         deleteGraph();
-        var dataset;
-        var unit;
-        var months = [];
-        try {
-            var jsonData = JSON.parse(data);
-            dataset = jsonData.dbData;
-            unit = jsonData.unit;
-        } catch (e) {
-            console.log("no parse");
-            return;
-        }
+
+        dataset = data.dbData;
+        unit = data.unit;
+
         var maxy = d3.max(dataset, function (d) {
             return d.yValue;
         });
 
         var i = 0;
         dataset.forEach(row => {
-            row.order = i++;
-            months.push(row.xLabel);
+            var splitDate = row.xLabel.split('-');
+            row.year = splitDate[0];
+            row.month = splitDate[1];
         });
         var xScale = d3.scale.ordinal()
             .domain(d3.range(dataset.length))
@@ -109,8 +121,11 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
             .attr("height", function (d) {
                 return yScale(0) - yScale(d.yValue);
             })
+            //.attr("fill", function (d) {
+            //    return "rgb(" + Math.round(((d.yValue / maxy) * 255)) + ", 0, 0)";
+            //})
             .attr("fill", function (d) {
-                return "rgb(" + Math.round(((d.yValue / maxy) * 255)) + ", 0, 0)";
+                return monthColors[d.month];
             })
             .on("mouseover", function (d) {
                 return tooltip.style("visibility", "visible").text(d.xLabel + ': ' + d.yValue + ' ' + unit);
@@ -135,5 +150,48 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
         svg.append("g")
             .attr("class", "axis")
             .call(yAxis);
+    }
+
+    function sortGraph(sortProp) {
+        if (typeof dataset != 'object') {
+            return;
+        }
+        if (sortProp === 'month') {
+            dataset.sort((a, b) => {
+                var elem1 = a.month;
+                var elem2 = b.month;
+                if (elem1 > elem2) {
+                    return 1;
+                }
+                if (elem1 < elem2) {
+                    return -1;
+                }
+                var elem1Month = a.year;
+                var elem2Month = b.year;
+                if (elem1Month > elem2Month) {
+                    return 1;
+                }
+                if (elem1Month < elem2Month) {
+                    return -1;
+                }
+                return 0;
+            });
+        } else {
+            dataset.sort(function (a, b) {
+                var elem1 = a[sortProp];
+                var elem2 = b[sortProp];
+                if (elem1 > elem2) {
+                    return 1;
+                }
+                if (elem1 < elem2) {
+                    return -1;
+                }
+                return 0;
+            });
+        }
+        showData({
+            dbData: dataset,
+            unit: unit
+        });
     }
 });

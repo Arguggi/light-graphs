@@ -8,7 +8,12 @@ define(['jquery'], function ($) {
                     method: "GET",
                     url: "/data/" + dataCol,
                     success: function success(response) {
-                        resolve(response);
+                        try {
+                            var jsonData = JSON.parse(response);
+                            resolve(jsonData);
+                        } catch (e) {
+                            reject(e);
+                        }
                     },
                     error: function error(request, respError) {
                         reject(respError);
