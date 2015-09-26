@@ -21,9 +21,7 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
     var unit;
     var tooltip = d3.select("body")
         .append("div")
-        .style("position", "absolute")
-        .style("z-index", "10")
-        .style("visibility", "hidden");
+        .attr("class", 'tooltip');
 
     var monthColors = {
         '01': '#D8D8D8',
