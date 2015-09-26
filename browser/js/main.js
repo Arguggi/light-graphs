@@ -41,20 +41,16 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
     };
 
     $(function () {
-        $("#showKwh").click(showKwh);
-        $("#showCost").click(showCost);
-        $("#sortMonth").click((ev) => sortGraph('month'));
-        $("#sortTime").click((ev) => sortGraph('xLabel'));
-        $("#sortValue").click((ev) => sortGraph('yValue'));
+        $("#showCost").click(ev => getData('cost'));
+        $("#showKwh").click(ev => getData('kwh'));
+        $("#showCostKwh").click(ev => getData('cost-kwh'));
+        $("#sortMonth").click(ev => sortGraph('month'));
+        $("#sortTime").click(ev => sortGraph('xLabel'));
+        $("#sortValue").click(ev => sortGraph('yValue'));
     });
 
-    function showCost() {
-        queryDb.getDbTable("cost")
-            .then(showData);
-    }
-
-    function showKwh() {
-        queryDb.getDbTable("kwh")
+    function getData(url) {
+        queryDb.getDbTable(url)
             .then(showData);
     }
 
@@ -150,9 +146,10 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
         svg.append("g")
             .attr("class", "axis")
             .call(yAxis);
-// Add an x-axis label.
+        // Add an x-axis label.
         svg.append("text")
             .attr("class", "ylabel")
+            // x and y are swapped since we rotate -90°
             .attr("x", -(h/2) - 10)
             .attr("y", '-30px')
             .attr("transform", "rotate(-90)")

@@ -36,3 +36,17 @@ app.get('/data/cost', function (req, res) {
             res.send(dataJson);
         });
 });
+
+app.get('/data/cost-kwh', function (req, res) {
+    db.queryDb('SELECT DATE_FORMAT(months.date,\'%Y-%m\') AS \'xLabel\', months.cost AS cost, months.kwh AS kwh FROM months ORDER BY DATE(months.date)')
+        .then(function sendData(results) {
+            results.forEach(row => {
+                    row.yValue = ((row.cost / row.kwh) * 100).toFixed(1);
+            });
+            var dataJson = JSON.stringify({
+                    dbData: results,
+                    unit: "€ cent"
+            });
+            res.send(dataJson);
+        });
+});
