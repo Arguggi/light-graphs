@@ -34,7 +34,7 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
         '08': '#B4FD00',
         '09': '#FFA558',
         '10': '#FFAD19',
-        '11': '#FF2800',
+        '11': '#991800',
         '12': '#ECEBEC'
     };
 
