@@ -39,6 +39,11 @@ button:active {
     font-size: 15px;
 }
 
+#movingAverage {
+    fill: none;
+    stroke: red;
+    stroke-width: 4px;
+}
 
 .axis path,
 .axis line {

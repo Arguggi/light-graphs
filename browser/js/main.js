@@ -14,6 +14,8 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
         bottom: 60,
         left: 60
     };
+
+    var averageUnits = ["€", "Kwh"];
     var w = $('#graph').width() - margin.left - margin.right;
     var h = 500 - margin.top - margin.bottom;
     var padding = w / 25;
@@ -39,17 +41,19 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
     };
 
     $(function () {
-        $("#showCost").click(ev => getData('cost'));
-        $("#showKwh").click(ev => getData('kwh'));
-        $("#showCostKwh").click(ev => getData('cost-kwh'));
+        $("#showCost").click(ev => getData('cost', true));
+        $("#showKwh").click(ev => getData('kwh', true));
+        $("#showCostKwh").click(ev => getData('cost-kwh', true));
         $("#sortMonth").click(ev => sortGraph('month'));
-        $("#sortTime").click(ev => sortGraph('xLabel'));
+        $("#sortTime").click(ev => sortGraph('xLabel', true));
         $("#sortValue").click(ev => sortGraph('yValue'));
     });
 
-    function getData(url) {
+    function getData(url, chronologicalOrder) {
         queryDb.getDbTable(url)
-            .then(showData);
+            .then(data => {
+                showData(data, chronologicalOrder);
+            });
     }
 
     function deleteGraph() {
@@ -57,7 +61,7 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
             .remove();
     }
 
-    function showData(data) {
+    function showData(data, chronologicalOrder) {
         deleteGraph();
 
         dataset = data.dbData;
@@ -72,6 +76,7 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
             var splitDate = row.xLabel.split('-');
             row.year = splitDate[0];
             row.month = splitDate[1];
+            row.order = i++;
         });
         var xScale = d3.scale.ordinal()
             .domain(d3.range(dataset.length))
@@ -91,6 +96,16 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
         var yAxis = d3.svg.axis()
             .scale(yScale)
             .orient("left");
+
+        // Define the line
+        var line = d3.svg.line()
+            .x(function (d) {
+                return (xScale.rangeBand() / 2) + xScale(d.order);
+            })
+            .y(function (d) {
+                let average = movingAverage(dataset, d.order);
+                return yScale(average);
+            });
 
         //Create SVG element
         var svg = d3.select("#graph")
@@ -115,9 +130,6 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
             .attr("height", function (d) {
                 return yScale(0) - yScale(d.yValue);
             })
-            //.attr("fill", function (d) {
-            //    return "rgb(" + Math.round(((d.yValue / maxy) * 255)) + ", 0, 0)";
-            //})
             .attr("fill", function (d) {
                 return monthColors[d.month];
             })
@@ -130,6 +142,16 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
             .on("mouseout", function (d) {
                 return tooltip.style("visibility", "hidden");
             });
+
+        // Add the rolling average path.
+        // Only add if the unit of the dataset is actually usefull
+        if (chronologicalOrder) {
+            svg.append("path")
+                .datum(dataset)
+                .attr("id", "movingAverage")
+                .attr("d", line);
+        }
+
 
         svg.append("g")
             .attr("class", "axis")
@@ -144,17 +166,18 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
         svg.append("g")
             .attr("class", "axis")
             .call(yAxis);
-        // Add an x-axis label.
+
+        // Add an y-axis label.
         svg.append("text")
             .attr("class", "ylabel")
             // x and y are swapped since we rotate -90°
-            .attr("x", -(h/2) - 10)
+            .attr("x", -(h / 2) - 10)
             .attr("y", '-30px')
             .attr("transform", "rotate(-90)")
             .text(data.unit);
     }
 
-    function sortGraph(sortProp) {
+    function sortGraph(sortProp, chronologicalOrder) {
         if (typeof dataset != 'object') {
             return;
         }
@@ -194,6 +217,21 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
         showData({
             dbData: dataset,
             unit: unit
-        });
+        }, chronologicalOrder);
     }
+
+    function movingAverage(dataset, position) {
+        if (position === 0) {
+            return dataset[position].yValue;
+        }
+        const months = 12;
+        let firstPos = position - months < 0 ? 0 : (position - months);
+        let sum = 0;
+        for (let i = firstPos; i < position; i++) {
+            // Force number conversion
+            sum += +dataset[i].yValue;
+        }
+        return sum / (position - firstPos);
+    }
+
 });
