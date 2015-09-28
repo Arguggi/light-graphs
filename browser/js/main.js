@@ -15,7 +15,6 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
         left: 60
     };
 
-    var averageUnits = ["€", "Kwh"];
     var w = $('#graph').width() - margin.left - margin.right;
     var h = 500 - margin.top - margin.bottom;
     var padding = w / 25;
