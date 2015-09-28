@@ -182,34 +182,17 @@ requirejs(['jquery', 'd3', 'queryDb'], function ($, d3, queryDb) {
         }
         if (sortProp === 'month') {
             dataset.sort((a, b) => {
-                var elem1 = a.month;
-                var elem2 = b.month;
-                if (elem1 > elem2) {
-                    return 1;
-                }
-                if (elem1 < elem2) {
-                    return -1;
-                }
-                var elem1Month = a.year;
-                var elem2Month = b.year;
-                if (elem1Month > elem2Month) {
-                    return 1;
-                }
-                if (elem1Month < elem2Month) {
-                    return -1;
-                }
+                if (a.month > b.month) return 1;
+                if (a.month < b.month) return -1;
+                // Sort same months by year
+                if (a.year > b.year) return 1;
+                if (a.year < b.year) return -1;
                 return 0;
             });
         } else {
             dataset.sort(function (a, b) {
-                var elem1 = a[sortProp];
-                var elem2 = b[sortProp];
-                if (elem1 > elem2) {
-                    return 1;
-                }
-                if (elem1 < elem2) {
-                    return -1;
-                }
+                if (a[sortProp] > b[sortProp]) return 1;
+                if (a[sortProp] < b[sortProp]) return -1;
                 return 0;
             });
         }
