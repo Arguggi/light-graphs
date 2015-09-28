@@ -1,6 +1,6 @@
 # Light
 
-Simple graphs with D3.js.
+Simple graphs with [D3.js](http://d3js.org/).
 
 ## Setup
 
